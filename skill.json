@@ -1,0 +1,16 @@
+{
+  "name": "genpark-git-unified-diff-patch-synthesizer-skill",
+  "version": "1.0.0",
+  "description": "Autonomous unified diff patch synthesizer, hunk parser, fuzzy patch applicator, and merge conflict detector.",
+  "author": "GenPark AI",
+  "license": "MIT",
+  "keywords": [
+    "git",
+    "patch",
+    "unified-diff",
+    "merge",
+    "autonomous-agent",
+    "genpark",
+    "mcp"
+  ]
+}
