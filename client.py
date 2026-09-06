@@ -35,7 +35,6 @@ class UnifiedDiffPatchSynthesizerClient:
         
         for line in patch_text.splitlines():
             if line.startswith("@@"):
-                # Header format: @@ -start,count +start,count @@
                 parts = line.split("@@")
                 header_info = parts[1].strip().split()
                 old_info = header_info[0][1:].split(",")
@@ -73,15 +72,12 @@ class UnifiedDiffPatchSynthesizerClient:
         conflicts = []
         applied_count = 0
 
-        # Process hunks in reverse order to preserve line offsets
         for hunk in sorted(hunks, key=lambda h: h["old_start"], reverse=True):
-            context_before = []
             expected_old = []
             replacement_new = []
 
             for h_line in hunk["lines"]:
                 if h_line.startswith(" "):
-                    context_before.append(h_line[1:])
                     expected_old.append(h_line[1:])
                     replacement_new.append(h_line[1:])
                 elif h_line.startswith("-"):
@@ -89,12 +85,10 @@ class UnifiedDiffPatchSynthesizerClient:
                 elif h_line.startswith("+"):
                     replacement_new.append(h_line[1:])
 
-            # Attempt to find match near old_start
             target_idx = hunk["old_start"] - 1
             found_idx = None
 
             for drift in range(max_drift + 1):
-                # Try positive drift then negative drift
                 for candidate in (target_idx + drift, target_idx - drift):
                     if 0 <= candidate <= len(lines) - len(expected_old):
                         candidate_chunk = lines[candidate : candidate + len(expected_old)]
@@ -105,7 +99,6 @@ class UnifiedDiffPatchSynthesizerClient:
                     break
 
             if found_idx is not None:
-                # Apply replacement
                 lines[found_idx : found_idx + len(expected_old)] = replacement_new
                 applied_count += 1
             else:
@@ -114,10 +107,8 @@ class UnifiedDiffPatchSynthesizerClient:
                     "reason": "Failed to locate matching context hunk within line drift window"
                 })
 
-        patched_content = "
-".join(lines) + ("
-" if original_text.endswith("
-") else "")
+        newline_char = chr(10)
+        patched_content = newline_char.join(lines) + (newline_char if original_text.endswith(newline_char) else "")
         return {
             "status": "success" if not conflicts else "conflicted",
             "applied_hunks": applied_count,
